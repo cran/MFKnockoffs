@@ -1,0 +1,113 @@
+---
+title: "Advanced Usage of the Model-Free Knockoff Filter"
+author: "Matteo Sesia (msesia@stanford.edu)"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Advanced Usage of the Model-Free Knockoff Filter}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+The function `MFKnockoffs.filter` is a wrapper around several simpler functions that
+
+1. Construct knockoff variables (various functions with prefix `MFKnockoffs.create`)
+2. Compute the test statistic $W$ (various functions with prefix `MFKnockoffs.stat`)
+3. Compute the threshold for variable selection (`MFKnockoffs.threshold`)
+
+These functions may be called directly if desired. The purpose of this vignette is to illustrate the flexibility of this package with some examples.
+
+```{r, results='hide', message=FALSE, warning=FALSE}
+set.seed(1234)
+library(MFKnockoffs)
+```
+
+Creating an artificial problem
+------------------------------
+Let us begin by creating some synthetic data.
+
+```{r}
+# Problem parameters
+n = 1000         # number of observations
+p = 1000         # number of variables
+k = 60           # number of variables with nonzero coefficients
+amplitude = 7.5  # signal amplitude (for noise level = 1)
+
+# Generate the variables from a multivariate normal distribution
+mu = rep(0,p); Sigma = diag(p)
+X = matrix(rnorm(n*p),n)
+
+# Generate the response from a logistic model and encode it as a factor.
+nonzero = sample(p, k)
+beta = amplitude * (1:p %in% nonzero) / sqrt(n)
+invlogit <- function(x) exp(x) / (1+exp(x))
+y.sample <- function(x) rbinom(n, prob=invlogit(x %*% beta), size=1)
+y = factor(y.sample(X), levels=c(0,1), labels=c("A","B"))
+```
+
+Looking inside the knockoff filter
+----------------------------------
+Instead of using `MFKnockoffs.filter` directly, we can run the filter manually
+by calling its main components one by one.
+
+The first step is to generate the knockoff variables for the true Gaussian distribution of the variables.
+```{r}
+X_k = MFKnockoffs.create.gaussian(X, mu, Sigma)
+```
+
+Then, we compute the knockoff statistics using 10-fold cross-validated lasso
+```{r, results='hide', message=FALSE, warning=FALSE}
+W = MFKnockoffs.stat.glmnet_coef_difference(X, X_k, y, nfolds=10, family="binomial")
+```
+
+Now we can compute the rejection threshold
+```{r}
+thres = MFKnockoffs.threshold(W, q=0.15, method='knockoff+')
+```
+
+The final step is to select the variables
+```{r}
+selected = which(W >= thres)
+print(selected)
+```
+
+The false discovery proportion is
+```{r}
+fdp <- function(selected) sum(beta[selected] == 0) / max(1, length(selected))
+fdp(selected)
+```
+
+Performing numerical simulations
+--------------------------------
+We show how to manually run the knockoff filter multiple times and compute
+average quantities. This is particularly useful to estimate the FDR
+(or the power) for a particular configuration of the knockoff filter
+on artificial problems.
+```{r}
+# Optimize the parameters needed for generating Gaussian knockoffs, 
+# by solving as SDP to minimize correlations with the original variables.
+# This calculation requires only the model parameters mu and Sigma, 
+# not the observed variables X. Therefore, there is no reason to perform it
+# more than once for our simulation.
+
+diag_s = MFKnockoffs.knocks.solve_sdp(Sigma)
+
+# Compute the fdp over 20 iterations
+nIterations = 20
+fdp_list = sapply(1:nIterations, function(it) {
+    # Run the knockoff filter manually, using the pre-computed value of diag_s
+    X_k = MFKnockoffs.create.gaussian(X, mu, Sigma, diag_s=diag_s)
+    W = MFKnockoffs.stat.glmnet_lambda_signed_max(X, X_k, y, family="binomial")
+    t = MFKnockoffs.threshold(W, q=0.15, method='knockoff+')
+    selected = which(W >= t)
+    # Compute and store the fdp
+    fdp(selected)
+  })
+# Estimate the FDR
+mean(fdp_list)
+```
+
+See also
+--------
+If you want to see some basic usage of the knockoff filter, see the [introductory vignette](MFKnockoffs.html).
+If you want to see how to use [the original knockoff filter](https://web.stanford.edu/~candes/Knockoffs/), see the [fixed-design vignette](fixed.html).

@@ -1,0 +1,56 @@
+---
+title: "Using the Knockoff Filter with a Fixed Design Matrix"
+author: "Matteo Sesia (msesia@stanford.edu)"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using the Knockoff Filter with a Fixed Design Matrix}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+  
+  The `MFKnockoffs` package can also be used to perform controlled variable selection with a fixed design matrix, assuming a linear regression model for the response. In this sense, `MFKnockoffs` is a superset of [the original knockoffs package](https://web.stanford.edu/~candes/Knockoffs/). 
+
+```{r, results='hide', message=FALSE, warning=FALSE}
+set.seed(1234)
+```
+
+```{r}
+# Problem parameters
+n = 1000          # number of observations
+p = 300           # number of variables
+k = 30            # number of variables with nonzero coefficients
+amplitude = 4.5   # signal amplitude (for noise level = 1)
+
+# Generate the variables from a multivariate normal distribution
+mu = rep(0,p); Sigma = diag(p)
+X = matrix(rnorm(n*p),n)
+
+# Generate the response from a linear model
+nonzero = sample(p, k)
+beta = amplitude * (1:p %in% nonzero) / sqrt(n)
+y.sample <- function(X) X %*% beta + rnorm(n)
+y = y.sample(X)
+```
+
+First examples
+--------------
+In order to create fixed-design knockoffs, we call `MFKnockoffs.filter` with the parameter `statistic` equal to `MFKnockoffs.stat.glmnet_lambda_difference`. Moreover, since not all statistics are valid with fixed-design knockoffs, we use `MFKnockoffs.stat.glmnet_lambda_difference` instead of the default one (which is based on cross-validation).
+```{r, results='hide', message=FALSE}
+library(MFKnockoffs)
+result = MFKnockoffs.filter(X, y, knockoffs = MFKnockoffs.create.fixed, statistic = MFKnockoffs.stat.glmnet_lambda_difference)
+```
+We can display the results with
+```{r}
+print(result)
+```
+The default value for the target false discovery rate is 0.1. In this experiment the false discovery proportion is
+```{r}
+fdp <- function(selected) sum(beta[selected] == 0) / max(1, length(selected))
+fdp(result$selected)
+```
+
+See also
+--------
+If you want to see some basic usage of the knockoff filter, see the [introductory vignette](MFKnockoffs.html).
+If you want to look inside the knockoff filter, see the [advanced vignette](advanced.html).
