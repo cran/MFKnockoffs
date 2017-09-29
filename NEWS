@@ -1,3 +1,9 @@
-MFKnockoff 0.6 (03/06/2017)
+MFKnockoff 0.9 (07/07/2017)
 ---------------------------------------
-Initial release is on its way...
+Initial release
+
+MFKnockoff 0.9.1 (09/27/2017)
+---------------------------------------
+Improved stability and performance of SDP knockoffs, switching SDP solver from SCS to RDSDP
+Improved stability and performance of positive-definite checks
+Using approximate-SDP knockoffs by default (when p>500), instead of SDP

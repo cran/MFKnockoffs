@@ -12,7 +12,7 @@
 
 <meta name="author" content="Matteo Sesia (msesia@stanford.edu)" />
 
-<meta name="date" content="2017-07-07" />
+<meta name="date" content="2017-09-28" />
 
 <title>Using the Model-Free Knockoff Filter</title>
 
@@ -20,28 +20,46 @@
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css">
+div.sourceCode { overflow-x: auto; }
 table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
   margin: 0; padding: 0; vertical-align: baseline; border: none; }
 table.sourceCode { width: 100%; line-height: 100%; }
 td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
 td.sourceCode { padding-left: 5px; }
-code > span.kw { color: #007020; font-weight: bold; }
-code > span.dt { color: #902000; }
-code > span.dv { color: #40a070; }
-code > span.bn { color: #40a070; }
-code > span.fl { color: #40a070; }
-code > span.ch { color: #4070a0; }
-code > span.st { color: #4070a0; }
-code > span.co { color: #60a0b0; font-style: italic; }
-code > span.ot { color: #007020; }
-code > span.al { color: #ff0000; font-weight: bold; }
-code > span.fu { color: #06287e; }
-code > span.er { color: #ff0000; font-weight: bold; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
 </style>
 
 
 
-<link href="data:text/css,body%20%7B%0A%20%20background%2Dcolor%3A%20%23fff%3B%0A%20%20margin%3A%201em%20auto%3B%0A%20%20max%2Dwidth%3A%20700px%3B%0A%20%20overflow%3A%20visible%3B%0A%20%20padding%2Dleft%3A%202em%3B%0A%20%20padding%2Dright%3A%202em%3B%0A%20%20font%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0A%20%20font%2Dsize%3A%2014px%3B%0A%20%20line%2Dheight%3A%201%2E35%3B%0A%7D%0A%0A%23header%20%7B%0A%20%20text%2Dalign%3A%20center%3B%0A%7D%0A%0A%23TOC%20%7B%0A%20%20clear%3A%20both%3B%0A%20%20margin%3A%200%200%2010px%2010px%3B%0A%20%20padding%3A%204px%3B%0A%20%20width%3A%20400px%3B%0A%20%20border%3A%201px%20solid%20%23CCCCCC%3B%0A%20%20border%2Dradius%3A%205px%3B%0A%0A%20%20background%2Dcolor%3A%20%23f6f6f6%3B%0A%20%20font%2Dsize%3A%2013px%3B%0A%20%20line%2Dheight%3A%201%2E3%3B%0A%7D%0A%20%20%23TOC%20%2Etoctitle%20%7B%0A%20%20%20%20font%2Dweight%3A%20bold%3B%0A%20%20%20%20font%2Dsize%3A%2015px%3B%0A%20%20%20%20margin%2Dleft%3A%205px%3B%0A%20%20%7D%0A%0A%20%20%23TOC%20ul%20%7B%0A%20%20%20%20padding%2Dleft%3A%2040px%3B%0A%20%20%20%20margin%2Dleft%3A%20%2D1%2E5em%3B%0A%20%20%20%20margin%2Dtop%3A%205px%3B%0A%20%20%20%20margin%2Dbottom%3A%205px%3B%0A%20%20%7D%0A%20%20%23TOC%20ul%20ul%20%7B%0A%20%20%20%20margin%2Dleft%3A%20%2D2em%3B%0A%20%20%7D%0A%20%20%23TOC%20li%20%7B%0A%20%20%20%20line%2Dheight%3A%2016px%3B%0A%20%20%7D%0A%0Atable%20%7B%0A%20%20margin%3A%201em%20auto%3B%0A%20%20border%2Dwidth%3A%201px%3B%0A%20%20border%2Dcolor%3A%20%23DDDDDD%3B%0A%20%20border%2Dstyle%3A%20outset%3B%0A%20%20border%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0A%20%20border%2Dwidth%3A%202px%3B%0A%20%20padding%3A%205px%3B%0A%20%20border%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0A%20%20border%2Dwidth%3A%201px%3B%0A%20%20border%2Dstyle%3A%20inset%3B%0A%20%20line%2Dheight%3A%2018px%3B%0A%20%20padding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0A%20%20border%2Dleft%2Dstyle%3A%20none%3B%0A%20%20border%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0A%20%20background%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0A%0Ap%20%7B%0A%20%20margin%3A%200%2E5em%200%3B%0A%7D%0A%0Ablockquote%20%7B%0A%20%20background%2Dcolor%3A%20%23f6f6f6%3B%0A%20%20padding%3A%200%2E25em%200%2E75em%3B%0A%7D%0A%0Ahr%20%7B%0A%20%20border%2Dstyle%3A%20solid%3B%0A%20%20border%3A%20none%3B%0A%20%20border%2Dtop%3A%201px%20solid%20%23777%3B%0A%20%20margin%3A%2028px%200%3B%0A%7D%0A%0Adl%20%7B%0A%20%20margin%2Dleft%3A%200%3B%0A%7D%0A%20%20dl%20dd%20%7B%0A%20%20%20%20margin%2Dbottom%3A%2013px%3B%0A%20%20%20%20margin%2Dleft%3A%2013px%3B%0A%20%20%7D%0A%20%20dl%20dt%20%7B%0A%20%20%20%20font%2Dweight%3A%20bold%3B%0A%20%20%7D%0A%0Aul%20%7B%0A%20%20margin%2Dtop%3A%200%3B%0A%7D%0A%20%20ul%20li%20%7B%0A%20%20%20%20list%2Dstyle%3A%20circle%20outside%3B%0A%20%20%7D%0A%20%20ul%20ul%20%7B%0A%20%20%20%20margin%2Dbottom%3A%200%3B%0A%20%20%7D%0A%0Apre%2C%20code%20%7B%0A%20%20background%2Dcolor%3A%20%23f7f7f7%3B%0A%20%20border%2Dradius%3A%203px%3B%0A%20%20color%3A%20%23333%3B%0A%20%20white%2Dspace%3A%20pre%2Dwrap%3B%20%20%20%20%2F%2A%20Wrap%20long%20lines%20%2A%2F%0A%7D%0Apre%20%7B%0A%20%20border%2Dradius%3A%203px%3B%0A%20%20margin%3A%205px%200px%2010px%200px%3B%0A%20%20padding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0A%20%20background%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0A%0Acode%20%7B%0A%20%20font%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0A%20%20font%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0A%20%20padding%3A%202px%200px%3B%0A%7D%0A%0Adiv%2Efigure%20%7B%0A%20%20text%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0A%20%20background%2Dcolor%3A%20%23FFFFFF%3B%0A%20%20padding%3A%202px%3B%0A%20%20border%3A%201px%20solid%20%23DDDDDD%3B%0A%20%20border%2Dradius%3A%203px%3B%0A%20%20border%3A%201px%20solid%20%23CCCCCC%3B%0A%20%20margin%3A%200%205px%3B%0A%7D%0A%0Ah1%20%7B%0A%20%20margin%2Dtop%3A%200%3B%0A%20%20font%2Dsize%3A%2035px%3B%0A%20%20line%2Dheight%3A%2040px%3B%0A%7D%0A%0Ah2%20%7B%0A%20%20border%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0A%20%20padding%2Dtop%3A%2010px%3B%0A%20%20padding%2Dbottom%3A%202px%3B%0A%20%20font%2Dsize%3A%20145%25%3B%0A%7D%0A%0Ah3%20%7B%0A%20%20border%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0A%20%20padding%2Dtop%3A%2010px%3B%0A%20%20font%2Dsize%3A%20120%25%3B%0A%7D%0A%0Ah4%20%7B%0A%20%20border%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0A%20%20margin%2Dleft%3A%208px%3B%0A%20%20font%2Dsize%3A%20105%25%3B%0A%7D%0A%0Ah5%2C%20h6%20%7B%0A%20%20border%2Dbottom%3A%201px%20solid%20%23ccc%3B%0A%20%20font%2Dsize%3A%20105%25%3B%0A%7D%0A%0Aa%20%7B%0A%20%20color%3A%20%230033dd%3B%0A%20%20text%2Ddecoration%3A%20none%3B%0A%7D%0A%20%20a%3Ahover%20%7B%0A%20%20%20%20color%3A%20%236666ff%3B%20%7D%0A%20%20a%3Avisited%20%7B%0A%20%20%20%20color%3A%20%23800080%3B%20%7D%0A%20%20a%3Avisited%3Ahover%20%7B%0A%20%20%20%20color%3A%20%23BB00BB%3B%20%7D%0A%20%20a%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0A%20%20%20%20text%2Ddecoration%3A%20underline%3B%20%7D%0A%20%20a%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0A%20%20%20%20text%2Ddecoration%3A%20underline%3B%20%7D%0A%0A%2F%2A%20Class%20described%20in%20https%3A%2F%2Fbenjeffrey%2Ecom%2Fposts%2Fpandoc%2Dsyntax%2Dhighlighting%2Dcss%0A%20%20%20Colours%20from%20https%3A%2F%2Fgist%2Egithub%2Ecom%2Frobsimmons%2F1172277%20%2A%2F%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%2F%2A%20Keyword%20%2A%2F%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%2F%2A%20DataType%20%2A%2F%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%2F%2A%20DecVal%20%28decimal%20values%29%20%2A%2F%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%2F%2A%20BaseN%20%2A%2F%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%2F%2A%20Float%20%2A%2F%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%2F%2A%20Char%20%2A%2F%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%2F%2A%20String%20%2A%2F%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%2F%2A%20Comment%20%2A%2F%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%2F%2A%20OtherToken%20%2A%2F%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%2F%2A%20AlertToken%20%2A%2F%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%2F%2A%20Function%20calls%20%2A%2F%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%2F%2A%20ErrorTok%20%2A%2F%0A%0A" rel="stylesheet" type="text/css" />
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
 
 </head>
 
@@ -52,13 +70,13 @@ code > span.er { color: #ff0000; font-weight: bold; }
 
 <h1 class="title toc-ignore">Using the Model-Free Knockoff Filter</h1>
 <h4 class="author"><em>Matteo Sesia (<a href="mailto:msesia@stanford.edu">msesia@stanford.edu</a>)</em></h4>
-<h4 class="date"><em>2017-07-07</em></h4>
+<h4 class="date"><em>2017-09-28</em></h4>
 
 
 
 <p>This vignette illustrates the basic and advanced usage of <code>MFKnockoffs.filter</code>. For simplicity, we will use synthetic data constructed such that the response only depends on a small fraction of the variables.</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">1234</span>)</code></pre>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Problem parameters</span>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">1234</span>)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Problem parameters</span>
 n =<span class="st"> </span><span class="dv">1000</span>          <span class="co"># number of observations</span>
 p =<span class="st"> </span><span class="dv">1000</span>          <span class="co"># number of variables</span>
 k =<span class="st"> </span><span class="dv">60</span>            <span class="co"># number of variables with nonzero coefficients</span>
@@ -71,148 +89,147 @@ X =<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">rnor
 <span class="co"># Generate the response from a linear model</span>
 nonzero =<span class="st"> </span><span class="kw">sample</span>(p, k)
 beta =<span class="st"> </span>amplitude *<span class="st"> </span>(<span class="dv">1</span>:p %in%<span class="st"> </span>nonzero) /<span class="st"> </span><span class="kw">sqrt</span>(n)
-y.sample &lt;-<span class="st"> </span>function(X) X %*%<span class="st"> </span>beta +<span class="st"> </span><span class="kw">rnorm</span>(n)
-y =<span class="st"> </span><span class="kw">y.sample</span>(X)</code></pre>
+y.sample =<span class="st"> </span>function(X) X %*%<span class="st"> </span>beta +<span class="st"> </span><span class="kw">rnorm</span>(n)
+y =<span class="st"> </span><span class="kw">y.sample</span>(X)</code></pre></div>
 <div id="first-examples" class="section level2">
 <h2>First examples</h2>
 <p>To begin, we call <code>MFKnockoffs.filter</code> with all the default settings.</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(MFKnockoffs)
-result =<span class="st"> </span><span class="kw">MFKnockoffs.filter</span>(X, y)</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(MFKnockoffs)
+result =<span class="st"> </span><span class="kw">MFKnockoffs.filter</span>(X, y)</code></pre></div>
 <p>We can display the results with</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(result)</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(result)</code></pre></div>
 <pre><code>## Call:
 ## MFKnockoffs.filter(X = X, y = y)
 ## 
 ## Selected variables:
-##  [1]   3   9  40  46  61  78  85 108 146 148 153 172 173 177 210 223 238
-## [18] 248 281 295 301 319 326 334 343 360 364 378 384 389 421 426 428 451
-## [35] 494 506 528 557 559 595 668 708 770 787 844 893 906 913 931 937 953
-## [52] 959</code></pre>
+##  [1]   3   9  40  44  46  61  78  85 108 146 148 153 172 173 177 210 223
+## [18] 238 248 281 301 319 326 334 343 360 364 378 384 389 421 426 428 451
+## [35] 494 506 510 528 557 559 595 668 682 708 718 770 775 787 844 893 906
+## [52] 913 931 937 953 959</code></pre>
 <p>The default value for the target false discovery rate is 0.1. In this experiment the false discovery proportion is</p>
-<pre class="sourceCode r"><code class="sourceCode r">fdp &lt;-<span class="st"> </span>function(selected) <span class="kw">sum</span>(beta[selected] ==<span class="st"> </span><span class="dv">0</span>) /<span class="st"> </span><span class="kw">max</span>(<span class="dv">1</span>, <span class="kw">length</span>(selected))
-<span class="kw">fdp</span>(result$selected)</code></pre>
-<pre><code>## [1] 0.03846154</code></pre>
-<p>By default, the knockoff filter creates second-order approximate Gaussian knockoffs. This construction estimates from the data the mean <span class="math">\(\mu\)</span> and the covariance <span class="math">\(\Sigma\)</span> of the rows of <span class="math">\(X\)</span>, instead of using the true parameters (<span class="math">\(\mu, \Sigma\)</span>) from which the variables were sampled.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fdp =<span class="st"> </span>function(selected) <span class="kw">sum</span>(beta[selected] ==<span class="st"> </span><span class="dv">0</span>) /<span class="st"> </span><span class="kw">max</span>(<span class="dv">1</span>, <span class="kw">length</span>(selected))
+<span class="kw">fdp</span>(result$selected)</code></pre></div>
+<pre><code>## [1] 0.1071429</code></pre>
+<p>By default, the knockoff filter creates second-order approximate Gaussian knockoffs. This construction estimates from the data the mean <span class="math inline">\(\mu\)</span> and the covariance <span class="math inline">\(\Sigma\)</span> of the rows of <span class="math inline">\(X\)</span>, instead of using the true parameters (<span class="math inline">\(\mu, \Sigma\)</span>) from which the variables were sampled.</p>
 <p>The model-free knockoff package includes other knockoff construction methods, all of which have names prefixed with <code>MFKnockoffs.create</code>. In the next snippet, we generate knockoffs using the true model parameters.</p>
-<pre class="sourceCode r"><code class="sourceCode r">gaussian_knockoffs =<span class="st"> </span>function(X) <span class="kw">MFKnockoffs.create.gaussian</span>(X, mu, Sigma)
-result =<span class="st"> </span><span class="kw">MFKnockoffs.filter</span>(X, y, <span class="dt">knockoffs =</span> gaussian_knockoffs)
-<span class="kw">print</span>(result)</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">gaussian_knockoffs =<span class="st"> </span>function(X) <span class="kw">MFKnockoffs.create.gaussian</span>(X, mu, Sigma)
+result =<span class="st"> </span><span class="kw">MFKnockoffs.filter</span>(X, y, <span class="dt">knockoffs=</span>gaussian_knockoffs)
+<span class="kw">print</span>(result)</code></pre></div>
 <pre><code>## Call:
 ## MFKnockoffs.filter(X = X, y = y, knockoffs = gaussian_knockoffs)
 ## 
 ## Selected variables:
-##  [1]   3   9  40  44  46  61  67  78  85 108 146 148 153 172 173 177 210
-## [18] 223 238 248 281 295 301 319 326 334 343 360 364 378 384 389 421 426
-## [35] 428 451 494 506 510 528 557 559 595 617 668 676 702 708 718 770 775
-## [52] 787 844 875 893 906 913 931 937 953 959</code></pre>
+##  [1]   3   9  40  44  46  61  78  85 108 146 148 153 172 173 177 210 223
+## [18] 238 248 281 301 319 326 334 343 360 364 378 384 389 421 426 428 451
+## [35] 494 506 528 557 559 595 596 668 682 708 770 775 787 844 893 906 913
+## [52] 931 937 953 959</code></pre>
 <p>Now the false discovery proportion is</p>
-<pre class="sourceCode r"><code class="sourceCode r">fdp &lt;-<span class="st"> </span>function(selected) <span class="kw">sum</span>(beta[selected] ==<span class="st"> </span><span class="dv">0</span>) /<span class="st"> </span><span class="kw">max</span>(<span class="dv">1</span>, <span class="kw">length</span>(selected))
-<span class="kw">fdp</span>(result$selected)</code></pre>
-<pre><code>## [1] 0.1311475</code></pre>
-<p>By default, the knockoff filter uses a test statistic based on the lasso. Specifically, it uses the statistic <code>MFKnockoffs.stat.glmnet_lambda_signed_max</code>, which computes <span class="math">\[
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fdp =<span class="st"> </span>function(selected) <span class="kw">sum</span>(beta[selected] ==<span class="st"> </span><span class="dv">0</span>) /<span class="st"> </span><span class="kw">max</span>(<span class="dv">1</span>, <span class="kw">length</span>(selected))
+<span class="kw">fdp</span>(result$selected)</code></pre></div>
+<pre><code>## [1] 0.09090909</code></pre>
+<p>By default, the knockoff filter uses a test statistic based on the lasso. Specifically, it uses the statistic <code>MFKnockoffs.stat.glmnet_lambda_signed_max</code>, which computes <span class="math display">\[
 W_j = |Z_j| - |\tilde{Z}_j|
-\]</span> where <span class="math">\(Z_j\)</span> and <span class="math">\(\tilde{Z}_j\)</span> are the lasso coefficient estimates for the jth variable and its knockoff, respectively. The value of the regularization parameter <span class="math">\(\lambda\)</span> is selected by cross-validation and computed with glmnet.</p>
+\]</span> where <span class="math inline">\(Z_j\)</span> and <span class="math inline">\(\tilde{Z}_j\)</span> are the lasso coefficient estimates for the jth variable and its knockoff, respectively. The value of the regularization parameter <span class="math inline">\(\lambda\)</span> is selected by cross-validation and computed with glmnet.</p>
 <p>Several other built-in statistics are available, all of which have names prefixed with <code>MFKnockoffs.stat</code>. In the next snippet, we use a statistic based on random forests. We also set a higher target FDR of 0.2.</p>
-<pre class="sourceCode r"><code class="sourceCode r">result =<span class="st"> </span><span class="kw">MFKnockoffs.filter</span>(X, y, <span class="dt">knockoffs =</span> gaussian_knockoffs, <span class="dt">statistic =</span> MFKnockoffs.stat.random_forest, <span class="dt">q=</span><span class="fl">0.2</span>)
-<span class="kw">print</span>(result)</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">result =<span class="st"> </span><span class="kw">MFKnockoffs.filter</span>(X, y, <span class="dt">knockoffs =</span> gaussian_knockoffs, <span class="dt">statistic =</span> MFKnockoffs.stat.random_forest, <span class="dt">q=</span><span class="fl">0.2</span>)
+<span class="kw">print</span>(result)</code></pre></div>
 <pre><code>## Call:
 ## MFKnockoffs.filter(X = X, y = y, knockoffs = gaussian_knockoffs, 
 ##     statistic = MFKnockoffs.stat.random_forest, q = 0.2)
 ## 
 ## Selected variables:
-##  [1]   9  40  61 108 146 148 173 180 223 238 248 254 301 326 347 378 384
-## [18] 421 426 428 557 668 708 770 774 785 795 844 913 931 937 953</code></pre>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fdp</span>(result$selected)</code></pre>
-<pre><code>## [1] 0.25</code></pre>
+##  [1]   9  85 108 146 173 210 223 238 248 254 301 326 343 378 421 426 428
+## [18] 510 668 708 767 770 774 785 931 937</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fdp</span>(result$selected)</code></pre></div>
+<pre><code>## [1] 0.2307692</code></pre>
 </div>
 <div id="user-defined-test-statistics" class="section level2">
 <h2>User-defined test statistics</h2>
-<p>In addition to using the predefined test statistics, it is also possible to define your own test statistics. To illustrate this functionality, we implement one of the simplest test statistics from the original knockoff filter paper, namely <span class="math">\[
+<p>In addition to using the predefined test statistics, it is also possible to define your own test statistics. To illustrate this functionality, we implement one of the simplest test statistics from the original knockoff filter paper, namely <span class="math display">\[
 W_j = \left|X_j^\top \cdot y\right| - \left|\tilde{X}_j^\top \cdot y\right|.
 \]</span></p>
-<pre class="sourceCode r"><code class="sourceCode r">my_knockoff_stat &lt;-<span class="st"> </span>function(X, X_k, y) {
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">my_knockoff_stat =<span class="st"> </span>function(X, X_k, y) {
   <span class="kw">abs</span>(<span class="kw">t</span>(X) %*%<span class="st"> </span>y) -<span class="st"> </span><span class="kw">abs</span>(<span class="kw">t</span>(X_k) %*%<span class="st"> </span>y)
 }
 result =<span class="st"> </span><span class="kw">MFKnockoffs.filter</span>(X, y, <span class="dt">knockoffs =</span> gaussian_knockoffs, <span class="dt">statistic =</span> my_knockoff_stat)
-<span class="kw">print</span>(result)</code></pre>
+<span class="kw">print</span>(result)</code></pre></div>
 <pre><code>## Call:
 ## MFKnockoffs.filter(X = X, y = y, knockoffs = gaussian_knockoffs, 
 ##     statistic = my_knockoff_stat)
 ## 
 ## Selected variables:
-##  [1]   3   9 108 146 148 172 173 223 238 248 301 326 360 364 378 421 426
-## [18] 428 494 559 668 708 770 844 875 906 931 937 953 959</code></pre>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fdp</span>(result$selected)</code></pre>
-<pre><code>## [1] 0.1</code></pre>
-<p>As another example, we show how to customize the grid of <span class="math">\(\lambda\)</span>’s used to compute the lasso path in the default test statistic.</p>
-<pre class="sourceCode r"><code class="sourceCode r">my_lasso_stat &lt;-<span class="st"> </span>function(...) <span class="kw">MFKnockoffs.stat.glmnet_coef_difference</span>(..., <span class="dt">nlambda=</span><span class="dv">100</span>)
+## integer(0)</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fdp</span>(result$selected)</code></pre></div>
+<pre><code>## [1] 0</code></pre>
+<p>As another example, we show how to customize the grid of <span class="math inline">\(\lambda\)</span>’s used to compute the lasso path in the default test statistic.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">my_lasso_stat =<span class="st"> </span>function(...) <span class="kw">MFKnockoffs.stat.glmnet_coef_difference</span>(..., <span class="dt">nlambda=</span><span class="dv">100</span>)
 result =<span class="st"> </span><span class="kw">MFKnockoffs.filter</span>(X, y, <span class="dt">knockoffs =</span> gaussian_knockoffs, <span class="dt">statistic =</span> my_lasso_stat)
-<span class="kw">print</span>(result)</code></pre>
+<span class="kw">print</span>(result)</code></pre></div>
 <pre><code>## Call:
 ## MFKnockoffs.filter(X = X, y = y, knockoffs = gaussian_knockoffs, 
 ##     statistic = my_lasso_stat)
 ## 
 ## Selected variables:
-##  [1]   3   9  40  46  61  78  85 108 148 153 172 173 177 210 223 238 248
-## [18] 281 295 301 319 326 334 343 360 364 378 384 389 421 426 428 451 494
-## [35] 506 528 559 595 617 668 702 708 770 775 787 844 893 906 913 931 937
-## [52] 953 959</code></pre>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fdp</span>(result$selected)</code></pre>
-<pre><code>## [1] 0.05660377</code></pre>
+##  [1]   3   9  40  44  46  61  78  85 108 146 148 153 172 173 177 210 223
+## [18] 238 248 281 295 301 319 326 334 343 360 364 378 384 389 421 426 428
+## [35] 451 494 506 510 528 557 559 595 651 668 676 702 708 718 770 775 787
+## [52] 836 844 893 906 913 931 937 953 959</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fdp</span>(result$selected)</code></pre></div>
+<pre><code>## [1] 0.1166667</code></pre>
 <p>The <code>nlambda</code> parameter is passed by <code>MFKnockoffs.stat.glmnet_coef_difference</code> to the <code>glmnet</code>, which is used to compute the lasso path. For more information about this and other parameters, see the documentation for <code>MFKnockoffs.stat.glmnet_coef_difference</code> or <code>glmnet.glmnet</code>.</p>
 </div>
 <div id="user-defined-knockoff-generation-functions" class="section level2">
 <h2>User-defined knockoff generation functions</h2>
 <p>In addition to using the predefined procedures for construction knockoff variables, it is also possible to create your own knockoffs. To illustrate this functionality, we implement a simple wrapper for the construction of second-order approximate Gaussian knockoffs.</p>
-<pre class="sourceCode r"><code class="sourceCode r">create_knockoffs &lt;-<span class="st"> </span>function(X) {
-  <span class="kw">MFKnockoffs.create.approximate_gaussian</span>(X, <span class="dt">method=</span><span class="kw">c</span>(<span class="st">'equi'</span>), <span class="dt">shrink=</span>T)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">create_knockoffs =<span class="st"> </span>function(X) {
+  <span class="kw">MFKnockoffs.create.approximate_gaussian</span>(X, <span class="dt">shrink=</span>T)
 }
 result =<span class="st"> </span><span class="kw">MFKnockoffs.filter</span>(X, y, <span class="dt">knockoffs=</span>create_knockoffs)
-<span class="kw">print</span>(result)</code></pre>
+<span class="kw">print</span>(result)</code></pre></div>
 <pre><code>## Call:
 ## MFKnockoffs.filter(X = X, y = y, knockoffs = create_knockoffs)
 ## 
 ## Selected variables:
-##  [1]   3   9  40  46  61  78  85 108 146 148 153 172 173 177 210 223 238
-## [18] 248 281 295 301 319 326 334 343 360 364 378 384 389 421 426 428 451
-## [35] 494 506 510 528 557 559 596 668 682 708 718 770 775 787 844 893 906
-## [52] 913 931 937 953 959</code></pre>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fdp</span>(result$selected)</code></pre>
-<pre><code>## [1] 0.08928571</code></pre>
+##  [1]   3   9  40  46  61  78  85 108 148 153 172 173 177 210 223 238 248
+## [18] 295 301 319 326 334 343 360 364 378 384 389 421 426 428 451 494 506
+## [35] 528 557 559 595 668 702 708 770 844 893 906 913 931 937 953 959</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fdp</span>(result$selected)</code></pre></div>
+<pre><code>## [1] 0.02</code></pre>
+</div>
+<div id="approximate-vs-full-sdp-knockoffs" class="section level2">
+<h2>Approximate vs Full SDP knockoffs</h2>
+<p>The knockoff package supports two main styles of knockoff variables, <em>semidefinite programming</em> (SDP) knockoffs (the default) and <em>equicorrelated</em> knockoffs. Though more computationally expensive, the SDP knockoffs are statistically superior by having higher power. To create SDP knockoffs, this package relies on the R library [Rdsdp][Rdsdp] to efficiently solve the semidefinite program. In high-dimensional settings, this program becomes computationally intractable. A solution is then offered by approximate SDP (ASDP) knockoffs, which address this issue by solving a simpler relaxed problem based on a block-diagonal approximation of the covariance matrix. By default, the knockoff filter uses SDP knockoffs if <span class="math inline">\(p&lt;500\)</span> and ASDP knockoffs otherwise.</p>
+<p>In this example we generate second-order Gaussian knockoffs using the estimated model parameters and the full SDP construction. Then, we run the knockoff filter as usual.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">gaussian_knockoffs =<span class="st"> </span>function(X) <span class="kw">MFKnockoffs.create.approximate_gaussian</span>(X, <span class="dt">method=</span><span class="st">'sdp'</span>, <span class="dt">shrink=</span>T)
+result =<span class="st"> </span><span class="kw">MFKnockoffs.filter</span>(X, y, <span class="dt">knockoffs =</span> gaussian_knockoffs)
+<span class="kw">print</span>(result)</code></pre></div>
+<pre><code>## Call:
+## MFKnockoffs.filter(X = X, y = y, knockoffs = gaussian_knockoffs)
+## 
+## Selected variables:
+##  [1]   3   9  40  44  46  61  78  85 108 141 146 148 153 172 173 177 210
+## [18] 238 248 274 281 295 301 319 326 334 343 347 360 364 378 384 389 421
+## [35] 426 428 451 494 506 510 528 557 559 668 676 682 702 708 718 770 775
+## [52] 787 836 844 893 906 913 931 937 953 959</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fdp</span>(result$selected)</code></pre></div>
+<pre><code>## [1] 0.147541</code></pre>
 </div>
 <div id="equicorrelated-knockoffs" class="section level2">
 <h2>Equicorrelated knockoffs</h2>
-<p>The knockoff package supports two main styles of knockoff variables, <em>semidefinite programming</em> (SDP) knockoffs (the default) and <em>equicorrelated</em> knockoffs. Though more computationally expensive, the SDP knockoffs are statistically superior by having higher power. To create SDP knockoffs, this package relies on the R library [scs][scs] to efficiently solve the semidefinite program, but for high-dimensioal problems (p&gt;&gt;1000) solving this SDP is computationally unfeasible. In such cases, it is much cheaper to generate equicorrelated knockoffs. In this example we generate second-order Gaussian knockoffs using the estimated model parameters and the equicorrelated construction. Then we run the knockoff filter.</p>
-<pre class="sourceCode r"><code class="sourceCode r">gaussian_knockoffs =<span class="st"> </span>function(X) <span class="kw">MFKnockoffs.create.approximate_gaussian</span>(X, <span class="dt">method=</span><span class="kw">c</span>(<span class="st">'equi'</span>), <span class="dt">shrink=</span>T)
+<p>Equicorrelated knockoffs offer a computationally cheaper alternative to SDP knockoffs, at the cost of lower statistical power. In this example we generate second-order Gaussian knockoffs using the estimated model parameters and the equicorrelated construction. Then we run the knockoff filter.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">gaussian_knockoffs =<span class="st"> </span>function(X) <span class="kw">MFKnockoffs.create.approximate_gaussian</span>(X, <span class="dt">method=</span><span class="st">'equi'</span>, <span class="dt">shrink=</span>T)
 result =<span class="st"> </span><span class="kw">MFKnockoffs.filter</span>(X, y, <span class="dt">knockoffs =</span> gaussian_knockoffs)
-<span class="kw">print</span>(result)</code></pre>
+<span class="kw">print</span>(result)</code></pre></div>
 <pre><code>## Call:
 ## MFKnockoffs.filter(X = X, y = y, knockoffs = gaussian_knockoffs)
 ## 
 ## Selected variables:
-##  [1]   3   9  40  61  78  85 108 148 153 172 173 177 210 223 238 248 281
-## [18] 301 319 326 343 364 378 384 389 421 426 428 451 494 506 528 557 559
-## [35] 668 708 770 844 906 913 931 937 953 959</code></pre>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fdp</span>(result$selected)</code></pre>
-<pre><code>## [1] 0.02272727</code></pre>
-</div>
-<div id="approximate-sdp-knockoffs" class="section level2">
-<h2>Approximate SDP knockoffs</h2>
-<p>In high-dimensional settings the semidefinite program used to construct SDP knockoffs becomes computationally intractable but equicorrelated knockoffs may yield very low power. A solution is then offered by approximate SDP knockoffs, which address this issue by solving a simpler relaxed problem based on a block-diagonal approximation of the covariance matrix.</p>
-<p>In this example we generate second-order Gaussian knockoffs using the estimated model parameters and the approximate SDP construction. Then we run the knockoff filter.</p>
-<pre class="sourceCode r"><code class="sourceCode r">gaussian_knockoffs =<span class="st"> </span>function(X) <span class="kw">MFKnockoffs.create.approximate_gaussian</span>(X, <span class="dt">method=</span><span class="kw">c</span>(<span class="st">'asdp'</span>), <span class="dt">shrink=</span>T)
-result =<span class="st"> </span><span class="kw">MFKnockoffs.filter</span>(X, y, <span class="dt">knockoffs =</span> gaussian_knockoffs)
-<span class="kw">print</span>(result)</code></pre>
-<pre><code>## Call:
-## MFKnockoffs.filter(X = X, y = y, knockoffs = gaussian_knockoffs)
-## 
-## Selected variables:
-##  [1]   3   9  40  46  61  67  78  85 108 146 148 153 172 173 177 210 223
-## [18] 238 248 281 295 301 319 326 334 343 360 364 378 384 389 421 426 428
-## [35] 451 494 506 510 528 557 559 595 668 702 708 718 770 775 787 844 893
-## [52] 906 913 931 937 953 959</code></pre>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fdp</span>(result$selected)</code></pre>
-<pre><code>## [1] 0.0877193</code></pre>
+##  [1]   3   9  40  46  61  78  85 108 148 153 172 173 177 210 223 238 248
+## [18] 281 301 319 326 334 343 360 364 378 384 389 421 426 428 451 494 506
+## [35] 510 528 557 559 595 668 676 682 702 708 770 775 787 844 893 906 913
+## [52] 931 937 953 959</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fdp</span>(result$selected)</code></pre></div>
+<pre><code>## [1] 0.05454545</code></pre>
 </div>
 <div id="see-also" class="section level2">
 <h2>See also</h2>

@@ -2,6 +2,23 @@
 `%diag*%` <- function(d, X) d * X
 `%*diag%` <- function(X, d) t(t(X) * d)
 
+# Efficient test for matrix positive-definiteness
+# 
+# Computes the smallest eigenvalue of a matrix A to verify whether
+# A is positive-definite
+#' @keywords internal
+is_posdef = function(A, tol=1e-6) {
+  p = nrow(matrix(A))
+  
+  if (p<3) {
+    lambda_min = min(eigen(A)$values)
+  }
+  else {
+    lambda_min = RSpectra::eigs(A, 1, which="SR", opts=list(retvec = FALSE, maxitr=100000, tol))$values
+  }
+  return (lambda_min>tol*10)
+}
+  
 # Reduced SVD with canonical sign choice.
 # 
 # Our convention is that the sign of each vector in U is chosen such that the

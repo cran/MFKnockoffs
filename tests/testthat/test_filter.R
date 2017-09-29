@@ -6,8 +6,8 @@ test_that('MFKnockoffs.filter verifies input dimensions', {
 
 test_that('MFKnockoffs.filter for fixed design is invariant under permutations of the columns of the design matrix.', {
   # Problem parameters
-  n = 500          # number of observations
-  p = 200          # number of variables
+  n = 250          # number of observations
+  p = 100          # number of variables
   k = 30           # number of variables with nonzero coefficients
   amplitude = 5    # signal amplitude (for noise level = 1)
   

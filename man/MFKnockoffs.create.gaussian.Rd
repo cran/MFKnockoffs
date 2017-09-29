@@ -4,7 +4,7 @@
 \alias{MFKnockoffs.create.gaussian}
 \title{Sample multivariate Gaussian knockoff variables}
 \usage{
-MFKnockoffs.create.gaussian(X, mu, Sigma, method = c("sdp", "asdp", "equi"),
+MFKnockoffs.create.gaussian(X, mu, Sigma, method = c("asdp", "sdp", "equi"),
   diag_s = NULL)
 }
 \arguments{
@@ -14,7 +14,7 @@ MFKnockoffs.create.gaussian(X, mu, Sigma, method = c("sdp", "asdp", "equi"),
 
 \item{Sigma}{p-by-p covariance matrix for X}
 
-\item{method}{either 'equi', 'sdp' or 'asdp' (default:'sdp')}
+\item{method}{either 'equi', 'sdp' or 'asdp' (default:'asdp')}
 
 \item{diag_s}{pre-computed vector of covariances between the original variables and the knockoffs.
 This will be computed according to 'method', if not supplied}

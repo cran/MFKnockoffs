@@ -15,7 +15,7 @@ X = matrix(rnorm(n*p),n)
 # Generate the response from a linear model
 nonzero = sample(p, k)
 beta = amplitude * (1:p %in% nonzero) / sqrt(n)
-y.sample <- function(X) X %*% beta + rnorm(n)
+y.sample = function(X) X %*% beta + rnorm(n)
 y = y.sample(X)
 
 ## ---- results='hide', message=FALSE--------------------------------------
@@ -26,6 +26,6 @@ result = MFKnockoffs.filter(X, y, knockoffs = MFKnockoffs.create.fixed, statisti
 print(result)
 
 ## ------------------------------------------------------------------------
-fdp <- function(selected) sum(beta[selected] == 0) / max(1, length(selected))
+fdp = function(selected) sum(beta[selected] == 0) / max(1, length(selected))
 fdp(result$selected)
 

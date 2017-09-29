@@ -1,10 +1,10 @@
 #' Optimization for SDP knockoffs
 #'
-#' Solves the optimization problem needed to create SDP knockoffs
+#' Solves the optimization problem needed to create SDP knockoffs using an interior point method
 #' 
 #' @param Sigma A positive-definite correlation matrix
-#' @param eps Numeric	convergence tolerance for the conic solver (default: 1e-4)
-#' @param max_iters The maximum number of iterations for the conic solver (default: 2500)
+#' @param maxit The maximum number of iterations for the solver (default: 1000)
+#' @param gaptol Tolerance for duality gap as a fraction of the value of the objective functions (default 1e-6)
 #' @return The solution \eqn{s} to the semidefinite programming problem defined above
 #'
 #' @details
@@ -22,68 +22,82 @@
 #' @family Optimize knockoffs
 #' 
 #' @export
-MFKnockoffs.knocks.solve_sdp <- function(Sigma, eps = 1e-4, max_iters = 2500) {
-  if (!requireNamespace('scs', quietly=T))
-    stop('scs is not installed', call.=F)
-  if (!requireNamespace('Matrix', quietly=T))
-    stop('Matrix is not installed', call.=F)
-  
+MFKnockoffs.knocks.solve_sdp <- function(Sigma, gaptol=1e-6, maxit=1000) {
   # Convert the covariance matrix to a correlation matrix
   G = cov2cor(Sigma)
   p = dim(G)[1]
+
+  # Check that the input matrix is positive-definite
+  if (!is_posdef(G)) {
+    stop('The covariance matrix is not positive-definite: cannot solve SDP',immediate.=T)
+  }
   
   # Convert problem for SCS
   
-  # First orthant cone constraint
-  b1 = rep(0,p)
-  A1 = -Matrix::Diagonal(p)
+  # Linear constraints
+  Cl1 = rep(0,p)
+  Al1 = -Matrix::Diagonal(p)
+  Cl2 = rep(1,p)
+  Al2 = Matrix::Diagonal(p)
   
-  # Second orthant cone constraint
-  b2 = rep(1,p)
-  A2 = Matrix::Diagonal(p)
+  # Positive-definite cone
+  d_As = c(diag(p))
+  As = Matrix::Diagonal(length(d_As), x=d_As)
+  As = As[which(Matrix::rowSums(As) > 0),] 
+  Cs = c(2*G)
   
-  # Positive-definite cone constraint
-  b3 = MFKnockoffs.knocks.vectorize_matrix(2*G)
-  d_A3 = MFKnockoffs.knocks.vectorize_matrix(diag(p))
-  A3 = Matrix::Diagonal(length(d_A3), x=d_A3)
-  A3 = A3[,Matrix::colSums(A3)>0]
-  obj = rep(-1,p)
+  # Assemble constraints and cones
+  A = cbind(Al1,Al2,As)
+  C = matrix(c(Cl1,Cl2,Cs),1)
+  K=NULL
+  K$s=p
+  K$l=2*p
   
-  # Assemble problem
-  A = rbind(A1,A2,A3)
-  b = c(b1,b2,b3)
-  cone = list(l=p*2,s=p)
+  # Objective
+  b = rep(1,p)
   
-  # Call SCS with increasing number of iterations until it converges
-  converged = F
-  converged_tried = 1
-  while (! converged ) {
-    max_iters_run = max_iters * converged_tried
-    control <- list(eps = eps, max_iters = max_iters_run, verbose=F, normalize=F)
-    sol <- scs::scs(A, b, obj, cone, control)
-    if ( sol$info$statusVal == 1 ) {
-      converged = T
-    }
-    else {
-      converged_tried = converged_tried+1
-      warning(paste('Conic solver (scs) for SDP knockoffs did not converge after', max_iters_run,
-                    'iterations. Trying again with double number of iterations'),immediate.=T)
-    }
+  # Solve SDP with Rdsdp
+  OPTIONS=NULL
+  OPTIONS$gaptol=gaptol
+  OPTIONS$maxit=maxit
+  OPTIONS$logsummary=0
+  OPTIONS$outputstats=0
+  OPTIONS$print=0
+  sol = Rdsdp::dsdp(A,b,C,K,OPTIONS)
+  
+  # Check whether the solution is feasible
+  if( ! identical(sol$STATS$stype,"PDFeasible")) {
+    warning('The SDP solver returned a non-feasible solution')
   }
   
+  # # Call solver with increasing number of iterations until it converges
+  # This may no longer be necessary as we switched to a better solver
+  # converged = F
+  # converged_tried = 1
+  # while (! converged ) {
+  #   max_iters_run = max_iters * converged_tried
+  #   control <- list(eps = eps, max_iters = max_iters_run, verbose=F, normalize=F)
+  #   sol <- scs::scs(A, b, obj, cone, control)
+  #   if ( sol$info$statusVal == 1 ) {
+  #     converged = T
+  #   }
+  #   else {
+  #     converged_tried = converged_tried+1
+  #     warning(paste('Conic solver (scs) for SDP knockoffs did not converge after', max_iters_run,
+  #                   'iterations. Trying again with double number of iterations'),immediate.=T)
+  #   }
+  # }
+  
   # Clip solution to correct numerical errors (domain)
-  s = sol$x
-  s[s<=0]=1e-8 # Having a zero here would cause instability
+  s = sol$y
+  s[s<0]=0
   s[s>1]=1
   
   # Compensate for numerical errors (feasibility)
-  psd = 0;
-  s_eps = 1e-8;
+  psd = 0
+  s_eps = 1e-8
   while (psd==0) {
-    diag_s = diag(s*(1-s_eps))
-    GInv_s = solve(G,diag_s)
-    Sigma_k = round(2*diag_s - diag_s %*% GInv_s,10)
-    if (matrixcalc::is.positive.definite(Sigma_k)) {
+    if (is_posdef(2*G-diag(s*(1-s_eps),length(s)))) {
       psd  = 1
     }
     else {
@@ -91,6 +105,11 @@ MFKnockoffs.knocks.solve_sdp <- function(Sigma, eps = 1e-4, max_iters = 2500) {
     }
   }
   s = s*(1-s_eps)
+  
+  # Verify that the solution is correct
+  if (max(s)==0) {
+   warning('In creation of SDP knockoffs, procedure failed. Knockoffs will have no power.',immediate.=T)
+  }
   
   # Scale back the results for a covariance matrix
   return(s*diag(Sigma))

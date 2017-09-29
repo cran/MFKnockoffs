@@ -4,8 +4,8 @@
 \alias{MFKnockoffs.knocks.solve_asdp}
 \title{Optimization for SDP knockoffs}
 \usage{
-MFKnockoffs.knocks.solve_asdp(Sigma, nBlocks = 10, cores = 1, eps = 0.001,
-  max_iters = 2500)
+MFKnockoffs.knocks.solve_asdp(Sigma, nBlocks = 10, cores = 1,
+  gaptol = 1e-06, maxit = 1000)
 }
 \arguments{
 \item{Sigma}{A positive-definite correlation matrix}
@@ -14,9 +14,9 @@ MFKnockoffs.knocks.solve_asdp(Sigma, nBlocks = 10, cores = 1, eps = 0.001,
 
 \item{cores}{Number of cores used to solve the smaller SDPs (default: 1)}
 
-\item{eps}{Numeric    convergence tolerance for the conic solver (default: 1e-3)}
+\item{gaptol}{Tolerance for duality gap as a fraction of the value of the objective functions (default 1e-6)}
 
-\item{max_iters}{The maximum number of iterations for the conic solver (default: 2500)}
+\item{maxit}{The maximum number of iterations for the solver (default: 1000)}
 }
 \value{
 The solution \eqn{s} to the semidefinite programming problem defined above

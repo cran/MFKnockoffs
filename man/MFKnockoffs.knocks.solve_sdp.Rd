@@ -4,20 +4,20 @@
 \alias{MFKnockoffs.knocks.solve_sdp}
 \title{Optimization for SDP knockoffs}
 \usage{
-MFKnockoffs.knocks.solve_sdp(Sigma, eps = 1e-04, max_iters = 2500)
+MFKnockoffs.knocks.solve_sdp(Sigma, gaptol = 1e-06, maxit = 1000)
 }
 \arguments{
 \item{Sigma}{A positive-definite correlation matrix}
 
-\item{eps}{Numeric    convergence tolerance for the conic solver (default: 1e-4)}
+\item{gaptol}{Tolerance for duality gap as a fraction of the value of the objective functions (default 1e-6)}
 
-\item{max_iters}{The maximum number of iterations for the conic solver (default: 2500)}
+\item{maxit}{The maximum number of iterations for the solver (default: 1000)}
 }
 \value{
 The solution \eqn{s} to the semidefinite programming problem defined above
 }
 \description{
-Solves the optimization problem needed to create SDP knockoffs
+Solves the optimization problem needed to create SDP knockoffs using an interior point method
 }
 \details{
 Solves the semidefinite programming problem:

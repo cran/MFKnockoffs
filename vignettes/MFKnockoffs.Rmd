@@ -29,7 +29,7 @@ X = matrix(rnorm(n*p),n)
 # Generate the response from a linear model
 nonzero = sample(p, k)
 beta = amplitude * (1:p %in% nonzero) / sqrt(n)
-y.sample <- function(X) X %*% beta + rnorm(n)
+y.sample = function(X) X %*% beta + rnorm(n)
 y = y.sample(X)
 ```
 
@@ -47,7 +47,7 @@ print(result)
 ```
 The default value for the target false discovery rate is 0.1. In this experiment the false discovery proportion is
 ```{r}
-fdp <- function(selected) sum(beta[selected] == 0) / max(1, length(selected))
+fdp = function(selected) sum(beta[selected] == 0) / max(1, length(selected))
 fdp(result$selected)
 ```
 
@@ -56,12 +56,12 @@ By default, the knockoff filter creates second-order approximate Gaussian knocko
 The model-free knockoff package includes other knockoff construction methods, all of which have names prefixed with `MFKnockoffs.create`. In the next snippet, we generate knockoffs using the true model parameters.
 ```{r}
 gaussian_knockoffs = function(X) MFKnockoffs.create.gaussian(X, mu, Sigma)
-result = MFKnockoffs.filter(X, y, knockoffs = gaussian_knockoffs)
+result = MFKnockoffs.filter(X, y, knockoffs=gaussian_knockoffs)
 print(result)
 ```
 Now the false discovery proportion is
 ```{r}
-fdp <- function(selected) sum(beta[selected] == 0) / max(1, length(selected))
+fdp = function(selected) sum(beta[selected] == 0) / max(1, length(selected))
 fdp(result$selected)
 ```
 
@@ -90,7 +90,7 @@ W_j = \left|X_j^\top \cdot y\right| - \left|\tilde{X}_j^\top \cdot y\right|.
 $$
 
 ```{r, warning=FALSE}
-my_knockoff_stat <- function(X, X_k, y) {
+my_knockoff_stat = function(X, X_k, y) {
   abs(t(X) %*% y) - abs(t(X_k) %*% y)
 }
 result = MFKnockoffs.filter(X, y, knockoffs = gaussian_knockoffs, statistic = my_knockoff_stat)
@@ -101,7 +101,7 @@ fdp(result$selected)
 As another example, we show how to customize the grid of $\lambda$'s used to compute the lasso path in the default test statistic.
 
 ```{r, warning=FALSE}
-my_lasso_stat <- function(...) MFKnockoffs.stat.glmnet_coef_difference(..., nlambda=100)
+my_lasso_stat = function(...) MFKnockoffs.stat.glmnet_coef_difference(..., nlambda=100)
 result = MFKnockoffs.filter(X, y, knockoffs = gaussian_knockoffs, statistic = my_lasso_stat)
 print(result)
 fdp(result$selected)
@@ -116,8 +116,8 @@ User-defined knockoff generation functions
 In addition to using the predefined procedures for construction knockoff variables, it is also possible to create your own knockoffs. To illustrate this functionality, we implement a simple wrapper for the construction of second-order approximate Gaussian knockoffs.
 
 ```{r}
-create_knockoffs <- function(X) {
-  MFKnockoffs.create.approximate_gaussian(X, method=c('equi'), shrink=T)
+create_knockoffs = function(X) {
+  MFKnockoffs.create.approximate_gaussian(X, shrink=T)
 }
 result = MFKnockoffs.filter(X, y, knockoffs=create_knockoffs)
 print(result)
@@ -125,26 +125,26 @@ fdp(result$selected)
 ```
 
 
-Equicorrelated knockoffs
+Approximate vs Full SDP knockoffs
 -----------------
-The knockoff package supports two main styles of knockoff variables, *semidefinite programming* (SDP) knockoffs (the default) and  *equicorrelated* knockoffs. Though more computationally expensive, the SDP knockoffs are statistically superior by having higher power. To create SDP knockoffs, this package relies on the R library [scs][scs] to efficiently solve the semidefinite program, but for high-dimensioal problems (p>>1000) solving this SDP is computationally unfeasible. In such cases, it is much cheaper to generate equicorrelated knockoffs.
-In this example we generate second-order Gaussian knockoffs using the estimated model parameters and the equicorrelated construction. Then we run the knockoff filter.
+The knockoff package supports two main styles of knockoff variables, *semidefinite programming* (SDP) knockoffs (the default) and  *equicorrelated* knockoffs. Though more computationally expensive, the SDP knockoffs are statistically superior by having higher power. To create SDP knockoffs, this package relies on the R library [Rdsdp][Rdsdp] to efficiently solve the semidefinite program.
+In high-dimensional settings, this program becomes computationally intractable.
+A solution is then offered by approximate SDP (ASDP) knockoffs, which address this issue by solving a simpler relaxed problem based on a block-diagonal approximation of the covariance matrix. By default, the knockoff filter uses SDP knockoffs if $p<500$ and ASDP knockoffs otherwise.
+
+In this example we generate second-order Gaussian knockoffs using the estimated model parameters and the full SDP construction. Then, we run the knockoff filter as usual.
 ```{r}
-gaussian_knockoffs = function(X) MFKnockoffs.create.approximate_gaussian(X, method=c('equi'), shrink=T)
+gaussian_knockoffs = function(X) MFKnockoffs.create.approximate_gaussian(X, method='sdp', shrink=T)
 result = MFKnockoffs.filter(X, y, knockoffs = gaussian_knockoffs)
 print(result)
 fdp(result$selected)
 ```
 
-
-Approximate SDP knockoffs
+Equicorrelated knockoffs
 -----------------
-In high-dimensional settings the semidefinite program used to construct SDP knockoffs becomes computationally intractable but equicorrelated knockoffs may yield very low power.
-A solution is then offered by approximate SDP knockoffs, which address this issue by solving a simpler relaxed problem based on a block-diagonal approximation of the covariance matrix.
-
-In this example we generate second-order Gaussian knockoffs using the estimated model parameters and the approximate SDP construction. Then we run the knockoff filter.
+Equicorrelated knockoffs offer a computationally cheaper alternative to SDP knockoffs, at the cost of lower statistical power.
+In this example we generate second-order Gaussian knockoffs using the estimated model parameters and the equicorrelated construction. Then we run the knockoff filter.
 ```{r}
-gaussian_knockoffs = function(X) MFKnockoffs.create.approximate_gaussian(X, method=c('asdp'), shrink=T)
+gaussian_knockoffs = function(X) MFKnockoffs.create.approximate_gaussian(X, method='equi', shrink=T)
 result = MFKnockoffs.filter(X, y, knockoffs = gaussian_knockoffs)
 print(result)
 fdp(result$selected)

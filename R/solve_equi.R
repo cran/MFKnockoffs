@@ -22,28 +22,32 @@ MFKnockoffs.knocks.solve_equi <- function(Sigma) {
   # Convert the covariance matrix to a correlation matrix
   G = cov2cor(Sigma)
   
-  if (requireNamespace('rARPACK', quietly=T)) {
+  # Check that the input matrix is positive-definite
+  if (!is_posdef(G)) {
+    stop('The covariance matrix is not positive-definite: cannot solve SDP',immediate.=T)
+  }
+  
+  if (p>2) {
     converged=FALSE
     maxitr=10000
     while (!converged) {
-      lambda_min = rARPACK::eigs(G, 1, which = "SR", opts = list(retvec = FALSE, maxitr=maxitr, tol=tol))$values
+      lambda_min = RSpectra::eigs(G, 1, which="SR", opts=list(retvec = FALSE, maxitr=100000, tol=1e-8))$values
       if (length(lambda_min)==1) {
         converged = TRUE
       } else {
         if (maxitr>1e8) {
           warning('In creation of equi-correlated knockoffs, while computing the smallest eigenvalue of the 
-                covariance matrix. rARPACK::eigs did not converge. Giving up and computing full SVD with built-in R function.',immediate.=T)
+                covariance matrix. RSpectra::eigs did not converge. Giving up and computing full SVD with built-in R function.',immediate.=T)
           lambda_min = eigen(G, symmetric=T, only.values = T)$values[p]
           converged=TRUE
         } else {
           warning('In creation of equi-correlated knockoffs, while computing the smallest eigenvalue of the 
-                covariance matrix. rARPACK::eigs did not converge. Trying again with increased number of iterations.',immediate.=T)
+                covariance matrix. RSpectra::eigs did not converge. Trying again with increased number of iterations.',immediate.=T)
           maxitr = maxitr*10
         }
       }
     }
   } else {
-    warning('Package rARPACK is not installed. Fast creation of equi-correlated knockoffs is not available.', call.=F,immediate.=T)
     lambda_min = eigen(G, symmetric=T, only.values = T)$values[p]
   }
   
@@ -58,13 +62,8 @@ MFKnockoffs.knocks.solve_equi <- function(Sigma) {
   psd = 0;
   s_eps = 1e-8;
   while (psd==0) {
-    diag_s = diag(s*(1-s_eps))
-    GInv_s = solve(G,diag_s)
-    Sigma_k = round(2*diag_s - diag_s %*% GInv_s,10)
-    if (matrixcalc::is.positive.definite(Sigma_k)) {
-      psd  = 1
-    }
-    else {
+    psd = is_posdef(2*G-diag(s*(1-s_eps),length(s)))
+    if (!psd) {
       s_eps = s_eps*10
     }
   }

@@ -4,7 +4,7 @@
 #' for the original variables.
 #' 
 #' @param X normalized n-by-p realization of the design matrix
-#' @param method either 'equi', 'sdp' or 'asdp' (default:'equi')
+#' @param method either 'equi', 'sdp' or 'asdp' (default:'asdp')
 #' This will be computed according to 'method', if not supplied 
 #' @param shrink whether to shrink the estimated covariance matrix (default: FALSE)
 #' @return n-by-p matrix of knockoff variables
@@ -28,7 +28,7 @@
 #'   \href{https://statweb.stanford.edu/~candes/MF_Knockoffs/index.html}{https://statweb.stanford.edu/~candes/MF_Knockoffs/index.html}
 #'   
 #' @export
-MFKnockoffs.create.approximate_gaussian <- function(X, method=c("sdp","equi","asdp"), shrink=F) {
+MFKnockoffs.create.approximate_gaussian <- function(X, method=c("asdp","equi","sdp"), shrink=F) {
   method = match.arg(method)
   # Estimate the mean vectorand covariance matrix
   mu = colMeans(X)
@@ -37,11 +37,7 @@ MFKnockoffs.create.approximate_gaussian <- function(X, method=c("sdp","equi","as
   if(!shrink) {
     Sigma = cov(X)
     # Verify that the covariance matrix is positive-definite
-    eivals = eigen(Sigma)$values
-    tol = 1e-9
-    
-    if(min(eivals)<tol) {
-      warning("The estimated covariance matrix needed to create approximate second-order Gaussian knockoffs is not positive-definite. Using shrinkage estimate instead (corpcor::cov.shrink).",immediate.=T)
+    if(!is_posdef(Sigma)) {
       shrink=TRUE
     }
   }

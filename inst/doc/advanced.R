@@ -16,8 +16,8 @@ X = matrix(rnorm(n*p),n)
 # Generate the response from a logistic model and encode it as a factor.
 nonzero = sample(p, k)
 beta = amplitude * (1:p %in% nonzero) / sqrt(n)
-invlogit <- function(x) exp(x) / (1+exp(x))
-y.sample <- function(x) rbinom(n, prob=invlogit(x %*% beta), size=1)
+invlogit = function(x) exp(x) / (1+exp(x))
+y.sample = function(x) rbinom(n, prob=invlogit(x %*% beta), size=1)
 y = factor(y.sample(X), levels=c(0,1), labels=c("A","B"))
 
 ## ------------------------------------------------------------------------
@@ -34,7 +34,7 @@ selected = which(W >= thres)
 print(selected)
 
 ## ------------------------------------------------------------------------
-fdp <- function(selected) sum(beta[selected] == 0) / max(1, length(selected))
+fdp = function(selected) sum(beta[selected] == 0) / max(1, length(selected))
 fdp(selected)
 
 ## ------------------------------------------------------------------------

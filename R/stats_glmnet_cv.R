@@ -79,11 +79,11 @@ MFKnockoffs.stat.glmnet_coef_difference <- function(X, X_k, y, family='gaussian'
     stop('glmnet is not installed', call.=F)
   parallel=T
   if (!requireNamespace('doMC', quietly=T)) {
-    warning('doMC is not installed. Without parallelization knockoff statistics will be slower to compute', call.=F,immediate.=T)
+    warning('doMC is not installed. Without parallelization, the knockoff statistics will be slower to compute', call.=F,immediate.=T)
     parallel=F
   }
   if (!requireNamespace('parallel', quietly=T)) {
-    warning('parallel is not installed. Without parallelization knockoff statistics will be slower to compute.', call.=F,immediate.=T)
+    warning('parallel is not installed. Without parallelization, the knockoff statistics will be slower to compute.', call.=F,immediate.=T)
     parallel=F
   }
     

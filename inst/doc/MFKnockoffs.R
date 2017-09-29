@@ -15,7 +15,7 @@ X = matrix(rnorm(n*p),n)
 # Generate the response from a linear model
 nonzero = sample(p, k)
 beta = amplitude * (1:p %in% nonzero) / sqrt(n)
-y.sample <- function(X) X %*% beta + rnorm(n)
+y.sample = function(X) X %*% beta + rnorm(n)
 y = y.sample(X)
 
 ## ---- results='hide', message=F, warning=F-------------------------------
@@ -26,16 +26,16 @@ result = MFKnockoffs.filter(X, y)
 print(result)
 
 ## ------------------------------------------------------------------------
-fdp <- function(selected) sum(beta[selected] == 0) / max(1, length(selected))
+fdp = function(selected) sum(beta[selected] == 0) / max(1, length(selected))
 fdp(result$selected)
 
 ## ------------------------------------------------------------------------
 gaussian_knockoffs = function(X) MFKnockoffs.create.gaussian(X, mu, Sigma)
-result = MFKnockoffs.filter(X, y, knockoffs = gaussian_knockoffs)
+result = MFKnockoffs.filter(X, y, knockoffs=gaussian_knockoffs)
 print(result)
 
 ## ------------------------------------------------------------------------
-fdp <- function(selected) sum(beta[selected] == 0) / max(1, length(selected))
+fdp = function(selected) sum(beta[selected] == 0) / max(1, length(selected))
 fdp(result$selected)
 
 ## ------------------------------------------------------------------------
@@ -44,7 +44,7 @@ print(result)
 fdp(result$selected)
 
 ## ---- warning=FALSE------------------------------------------------------
-my_knockoff_stat <- function(X, X_k, y) {
+my_knockoff_stat = function(X, X_k, y) {
   abs(t(X) %*% y) - abs(t(X_k) %*% y)
 }
 result = MFKnockoffs.filter(X, y, knockoffs = gaussian_knockoffs, statistic = my_knockoff_stat)
@@ -52,27 +52,27 @@ print(result)
 fdp(result$selected)
 
 ## ---- warning=FALSE------------------------------------------------------
-my_lasso_stat <- function(...) MFKnockoffs.stat.glmnet_coef_difference(..., nlambda=100)
+my_lasso_stat = function(...) MFKnockoffs.stat.glmnet_coef_difference(..., nlambda=100)
 result = MFKnockoffs.filter(X, y, knockoffs = gaussian_knockoffs, statistic = my_lasso_stat)
 print(result)
 fdp(result$selected)
 
 ## ------------------------------------------------------------------------
-create_knockoffs <- function(X) {
-  MFKnockoffs.create.approximate_gaussian(X, method=c('equi'), shrink=T)
+create_knockoffs = function(X) {
+  MFKnockoffs.create.approximate_gaussian(X, shrink=T)
 }
 result = MFKnockoffs.filter(X, y, knockoffs=create_knockoffs)
 print(result)
 fdp(result$selected)
 
 ## ------------------------------------------------------------------------
-gaussian_knockoffs = function(X) MFKnockoffs.create.approximate_gaussian(X, method=c('equi'), shrink=T)
+gaussian_knockoffs = function(X) MFKnockoffs.create.approximate_gaussian(X, method='sdp', shrink=T)
 result = MFKnockoffs.filter(X, y, knockoffs = gaussian_knockoffs)
 print(result)
 fdp(result$selected)
 
 ## ------------------------------------------------------------------------
-gaussian_knockoffs = function(X) MFKnockoffs.create.approximate_gaussian(X, method=c('asdp'), shrink=T)
+gaussian_knockoffs = function(X) MFKnockoffs.create.approximate_gaussian(X, method='equi', shrink=T)
 result = MFKnockoffs.filter(X, y, knockoffs = gaussian_knockoffs)
 print(result)
 fdp(result$selected)

@@ -4,13 +4,13 @@
 \alias{MFKnockoffs.create.approximate_gaussian}
 \title{Sample approximate second-order multivariate Gaussian knockoff variables}
 \usage{
-MFKnockoffs.create.approximate_gaussian(X, method = c("sdp", "equi", "asdp"),
+MFKnockoffs.create.approximate_gaussian(X, method = c("asdp", "equi", "sdp"),
   shrink = F)
 }
 \arguments{
 \item{X}{normalized n-by-p realization of the design matrix}
 
-\item{method}{either 'equi', 'sdp' or 'asdp' (default:'equi')
+\item{method}{either 'equi', 'sdp' or 'asdp' (default:'asdp')
 This will be computed according to 'method', if not supplied}
 
 \item{shrink}{whether to shrink the estimated covariance matrix (default: FALSE)}
